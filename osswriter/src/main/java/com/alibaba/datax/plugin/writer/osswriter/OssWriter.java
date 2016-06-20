@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import com.alibaba.datax.plugin.unstructuredstorage.writer.*;
+import com.alibaba.datax.plugin.unstructuredstorage.writer.Constant;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.slf4j.Logger;
@@ -20,7 +22,6 @@ import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.plugin.RecordReceiver;
 import com.alibaba.datax.common.spi.Writer;
 import com.alibaba.datax.common.util.Configuration;
-import com.alibaba.datax.plugin.unstructuredstorage.writer.UnstructuredStorageWriterUtil;
 import com.alibaba.datax.plugin.writer.osswriter.util.OssUtil;
 import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSSClient;
@@ -236,6 +237,7 @@ public class OssWriter extends Writer {
         private String fileFormat;
         private List<String> header;
         private Long maxFileSize;//MB
+        private boolean dropImportDelims;
 
         @Override
         public void init() {
@@ -268,6 +270,10 @@ public class OssWriter extends Writer {
             this.maxFileSize = this.writerSliceConfig
                     .getLong(com.alibaba.datax.plugin.unstructuredstorage.writer.Key.MAX_FILE_SIZE,
                             com.alibaba.datax.plugin.unstructuredstorage.writer.Constant.MAX_FILE_SIZE);
+
+            this.dropImportDelims = this.writerSliceConfig.
+                    getBool(com.alibaba.datax.plugin.unstructuredstorage.writer.Key.DROP_IMPORT_DELIMS,
+                            com.alibaba.datax.plugin.unstructuredstorage.writer.Constant.DROP_IMPORT_DELIMS);
         }
 
         @Override
@@ -328,7 +334,7 @@ public class OssWriter extends Writer {
                     // write: upload data to current object
                     MutablePair<String, Boolean> transportResult = UnstructuredStorageWriterUtil
                             .transportOneRecord(record, nullFormat, dateFormat,
-                                    fieldDelimiter, this.fileFormat,
+                                    fieldDelimiter, this.fileFormat, this.dropImportDelims,
                                     this.getTaskPluginCollector());
                     if (!transportResult.getRight()) {
                         sb.append(transportResult.getLeft());

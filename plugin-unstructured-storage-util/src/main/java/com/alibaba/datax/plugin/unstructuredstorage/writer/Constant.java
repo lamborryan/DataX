@@ -11,6 +11,8 @@ public class Constant {
 	public static final String FILE_FORMAT_CSV = "csv";
 	
 	public static final String FILE_FORMAT_TEXT = "text";
+
+	public static final boolean DROP_IMPORT_DELIMS = false;
 	
 	//每个分块10MB，最大10000个分块
 	public static final Long MAX_FILE_SIZE = 1024 * 1024 * 10 * 10000L;

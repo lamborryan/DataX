@@ -32,4 +32,7 @@ public class Key {
     
     // writer maxFileSize
     public static final String MAX_FILE_SIZE = "maxFileSize";
+
+    // is drop special character like  \n, \r, and \01
+    public static final String DROP_IMPORT_DELIMS = "dropImportDelims";
 }

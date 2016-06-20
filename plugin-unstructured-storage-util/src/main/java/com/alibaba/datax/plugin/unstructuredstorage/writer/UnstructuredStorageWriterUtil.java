@@ -131,6 +131,7 @@ public class UnstructuredStorageWriterUtil {
                     String.format("您配置的fileFormat [%s]错误, 支持csv, plainText两种.",
                             fileFormat));
         }
+
     }
 
     public static void writeToStream(RecordReceiver lineReceiver,
@@ -252,6 +253,9 @@ public class UnstructuredStorageWriterUtil {
         String fileFormat = config.getString(Key.FILE_FORMAT,
                 Constant.FILE_FORMAT_TEXT);
 
+        boolean dropImportDelims = config.getBool(Key.DROP_IMPORT_DELIMS,
+                Constant.DROP_IMPORT_DELIMS);
+
         String delimiterInStr = config.getString(Key.FIELD_DELIMITER);
         if (null != delimiterInStr && 1 != delimiterInStr.length()) {
             throw DataXException.asDataXException(
@@ -277,7 +281,7 @@ public class UnstructuredStorageWriterUtil {
         while ((record = lineReceiver.getFromReader()) != null) {
             MutablePair<String, Boolean> transportResult = UnstructuredStorageWriterUtil
                     .transportOneRecord(record, nullFormat, dateFormat,
-                            fieldDelimiter, fileFormat, taskPluginCollector);
+                            fieldDelimiter, fileFormat, dropImportDelims, taskPluginCollector);
             if (!transportResult.getRight()) {
                 writer.write(transportResult.getLeft());
             }
@@ -290,7 +294,7 @@ public class UnstructuredStorageWriterUtil {
      * */
     public static MutablePair<String, Boolean> transportOneRecord(
             Record record, String nullFormat, String dateFormat,
-            char fieldDelimiter, String fileFormat,
+            char fieldDelimiter, String fileFormat, boolean dropImportDelims,
             TaskPluginCollector taskPluginCollector) {
         // warn: default is null
         if (null == nullFormat) {
@@ -338,7 +342,7 @@ public class UnstructuredStorageWriterUtil {
         }
 
         transportResult.setLeft(UnstructuredStorageWriterUtil
-                .doTransportOneRecord(splitedRows, fieldDelimiter, fileFormat));
+                .doTransportOneRecord(splitedRows, fieldDelimiter, fileFormat, dropImportDelims));
         return transportResult;
     }
 
@@ -347,6 +351,7 @@ public class UnstructuredStorageWriterUtil {
         if (splitedRows.isEmpty()) {
             LOG.info("Found one record line which is empty.");
         }
+
         // warn: false means plain text(old way), true means strict csv format
         if (Constant.FILE_FORMAT_TEXT.equals(fileFormat)) {
             return StringUtils.join(splitedRows, fieldDelimiter)
@@ -365,6 +370,19 @@ public class UnstructuredStorageWriterUtil {
         }
     }
 
+    public static String doTransportOneRecord(List<String> splitedRows,
+                                              char fieldDelimiter,
+                                              String fileFormat,
+                                              boolean dropImportDelims){
+        List<String> splitRowsFilter;
+        if (Constant.DROP_IMPORT_DELIMS == dropImportDelims){
+            splitRowsFilter = splitedRows;
+        }else{
+            splitRowsFilter = filterFieldSpecialChar(splitedRows);
+        }
+        return doTransportOneRecord(splitRowsFilter,fieldDelimiter,fileFormat);
+    }
+
     private static void csvWriteSlience(CsvWriter csvWriter,
             List<String> splitedRows) {
         try {
@@ -377,5 +395,15 @@ public class UnstructuredStorageWriterUtil {
                     String.format("转换CSV格式失败[%s]",
                             StringUtils.join(splitedRows, " ")));
         }
+    }
+
+    // Drops \n, \r, and \01 from string fields .
+    private static List<String> filterFieldSpecialChar(List<String> splitedRows){
+        ArrayList<String> filteredRow = new ArrayList<String>();
+        for ( String row : splitedRows){
+            String filterRow = row.replaceAll("\n","").replaceAll("\r","").replaceAll("\01","");
+            filteredRow.add(filterRow);
+        }
+        return filteredRow;
     }
 }
