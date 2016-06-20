@@ -238,6 +238,7 @@ public class OssWriter extends Writer {
         private List<String> header;
         private Long maxFileSize;//MB
         private boolean dropImportDelims;
+        private boolean replaceDelims;
 
         @Override
         public void init() {
@@ -274,6 +275,10 @@ public class OssWriter extends Writer {
             this.dropImportDelims = this.writerSliceConfig.
                     getBool(com.alibaba.datax.plugin.unstructuredstorage.writer.Key.DROP_IMPORT_DELIMS,
                             com.alibaba.datax.plugin.unstructuredstorage.writer.Constant.DROP_IMPORT_DELIMS);
+
+            this.replaceDelims = this.writerSliceConfig.
+                    getBool(com.alibaba.datax.plugin.unstructuredstorage.writer.Key.REPLACE_DELIMS,
+                            com.alibaba.datax.plugin.unstructuredstorage.writer.Constant.REPLACE_DELIMS);
         }
 
         @Override
@@ -334,7 +339,7 @@ public class OssWriter extends Writer {
                     // write: upload data to current object
                     MutablePair<String, Boolean> transportResult = UnstructuredStorageWriterUtil
                             .transportOneRecord(record, nullFormat, dateFormat,
-                                    fieldDelimiter, this.fileFormat, this.dropImportDelims,
+                                    fieldDelimiter, this.fileFormat, this.dropImportDelims, this.replaceDelims,
                                     this.getTaskPluginCollector());
                     if (!transportResult.getRight()) {
                         sb.append(transportResult.getLeft());

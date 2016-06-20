@@ -256,6 +256,9 @@ public class UnstructuredStorageWriterUtil {
         boolean dropImportDelims = config.getBool(Key.DROP_IMPORT_DELIMS,
                 Constant.DROP_IMPORT_DELIMS);
 
+        boolean replaceDelims = config.getBool(Key.REPLACE_DELIMS,
+                Constant.REPLACE_DELIMS);
+
         String delimiterInStr = config.getString(Key.FIELD_DELIMITER);
         if (null != delimiterInStr && 1 != delimiterInStr.length()) {
             throw DataXException.asDataXException(
@@ -281,7 +284,7 @@ public class UnstructuredStorageWriterUtil {
         while ((record = lineReceiver.getFromReader()) != null) {
             MutablePair<String, Boolean> transportResult = UnstructuredStorageWriterUtil
                     .transportOneRecord(record, nullFormat, dateFormat,
-                            fieldDelimiter, fileFormat, dropImportDelims, taskPluginCollector);
+                            fieldDelimiter, fileFormat, dropImportDelims, replaceDelims, taskPluginCollector);
             if (!transportResult.getRight()) {
                 writer.write(transportResult.getLeft());
             }
@@ -294,7 +297,7 @@ public class UnstructuredStorageWriterUtil {
      * */
     public static MutablePair<String, Boolean> transportOneRecord(
             Record record, String nullFormat, String dateFormat,
-            char fieldDelimiter, String fileFormat, boolean dropImportDelims,
+            char fieldDelimiter, String fileFormat, boolean dropImportDelims, boolean replaceDelims,
             TaskPluginCollector taskPluginCollector) {
         // warn: default is null
         if (null == nullFormat) {
@@ -342,7 +345,7 @@ public class UnstructuredStorageWriterUtil {
         }
 
         transportResult.setLeft(UnstructuredStorageWriterUtil
-                .doTransportOneRecord(splitedRows, fieldDelimiter, fileFormat, dropImportDelims));
+                .doTransportOneRecord(splitedRows, fieldDelimiter, fileFormat, dropImportDelims, replaceDelims));
         return transportResult;
     }
 
@@ -373,12 +376,21 @@ public class UnstructuredStorageWriterUtil {
     public static String doTransportOneRecord(List<String> splitedRows,
                                               char fieldDelimiter,
                                               String fileFormat,
-                                              boolean dropImportDelims){
+                                              boolean dropImportDelims,
+                                              boolean replaceDelims){
         List<String> splitRowsFilter;
-        if (Constant.DROP_IMPORT_DELIMS == dropImportDelims){
-            splitRowsFilter = splitedRows;
+
+        if (Constant.REPLACE_DELIMS == replaceDelims){
+
+            if (Constant.DROP_IMPORT_DELIMS == dropImportDelims){
+                splitRowsFilter = splitedRows;
+            }else{
+                splitRowsFilter = filterFieldSpecialChar(splitedRows);
+            }
+
         }else{
-            splitRowsFilter = filterFieldSpecialChar(splitedRows);
+
+            splitRowsFilter = replaceFieldSpecialChar(splitedRows);
         }
         return doTransportOneRecord(splitRowsFilter,fieldDelimiter,fileFormat);
     }
@@ -402,6 +414,16 @@ public class UnstructuredStorageWriterUtil {
         ArrayList<String> filteredRow = new ArrayList<String>();
         for ( String row : splitedRows){
             String filterRow = row.replaceAll("\n","").replaceAll("\r","").replaceAll("\01","");
+            filteredRow.add(filterRow);
+        }
+        return filteredRow;
+    }
+
+    // Replace \n, \r, and \01 from string fields .
+    private static List<String> replaceFieldSpecialChar(List<String> splitedRows){
+        ArrayList<String> filteredRow = new ArrayList<String>();
+        for ( String row : splitedRows){
+            String filterRow = row.replaceAll("\n","\\\\n").replaceAll("\r","\\\\r").replaceAll("\01","\\\\01");
             filteredRow.add(filterRow);
         }
         return filteredRow;

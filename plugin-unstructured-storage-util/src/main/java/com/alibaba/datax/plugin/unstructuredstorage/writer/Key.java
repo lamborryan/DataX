@@ -35,4 +35,7 @@ public class Key {
 
     // is drop special character like  \n, \r, and \01
     public static final String DROP_IMPORT_DELIMS = "dropImportDelims";
+
+    // replace special character like  \n, \r, and \01
+    public static final String REPLACE_DELIMS = "replaceDelims";
 }
