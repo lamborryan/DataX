@@ -419,11 +419,14 @@ public class UnstructuredStorageWriterUtil {
         return filteredRow;
     }
 
-    // Replace \n, \r, and \01 from string fields .
+    // Replace \n, \r, and \01 \t from string fields .
     private static List<String> replaceFieldSpecialChar(List<String> splitedRows){
         ArrayList<String> filteredRow = new ArrayList<String>();
         for ( String row : splitedRows){
-            String filterRow = row.replaceAll("\n","\\\\n").replaceAll("\r","\\\\r").replaceAll("\01","\\\\01");
+            String filterRow = row.replaceAll("\n","\\\\n")
+                    .replaceAll("\r","\\\\r")
+                    .replaceAll("\01","\\\\01")
+                    .replaceAll("\t","\\\\t");
             filteredRow.add(filterRow);
         }
         return filteredRow;
