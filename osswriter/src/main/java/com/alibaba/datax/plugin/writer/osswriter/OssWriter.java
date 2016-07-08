@@ -339,7 +339,7 @@ public class OssWriter extends Writer {
                     // write: upload data to current object
                     MutablePair<String, Boolean> transportResult = UnstructuredStorageWriterUtil
                             .transportOneRecord(record, nullFormat, dateFormat,
-                                    fieldDelimiter, this.fileFormat, this.dropImportDelims, this.replaceDelims,
+                                        fieldDelimiter, this.fileFormat, this.dropImportDelims, this.replaceDelims,
                                     this.getTaskPluginCollector());
                     if (!transportResult.getRight()) {
                         sb.append(transportResult.getLeft());

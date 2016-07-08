@@ -413,7 +413,11 @@ public class UnstructuredStorageWriterUtil {
     private static List<String> filterFieldSpecialChar(List<String> splitedRows){
         ArrayList<String> filteredRow = new ArrayList<String>();
         for ( String row : splitedRows){
-            String filterRow = row.replaceAll("\n","").replaceAll("\r","").replaceAll("\01","");
+            String filterRow = row.replaceAll("\n","").
+                    replaceAll("\r","").
+                    replaceAll("\01","").
+                    replace("\t","").
+                    replace("\001","");
             filteredRow.add(filterRow);
         }
         return filteredRow;
@@ -426,7 +430,8 @@ public class UnstructuredStorageWriterUtil {
             String filterRow = row.replaceAll("\n","\\\\n")
                     .replaceAll("\r","\\\\r")
                     .replaceAll("\01","\\\\01")
-                    .replaceAll("\t","\\\\t");
+                    .replaceAll("\t","\\\\t")
+                    .replaceAll("\001","\\\\001");
             filteredRow.add(filterRow);
         }
         return filteredRow;
